@@ -7,6 +7,7 @@ import config
 import ccxt
 import ta
 import pandas as pd
+pd.set_option('display.max_rows', None)
 
 API_KEY = config.COINBASE_API_KEY
 API_PASSWORD = config.COINBASE_API_PASSWORD
@@ -14,7 +15,7 @@ API_PASSPHRASE = config.COINBASE_API_PASSPHRASE
 
 exchange = ccxt.coinbasepro()
 
-bars = exchange.fetch_ohlcv('ETH/USD', timeframe='15m', limit = 30)
+bars = exchange.fetch_ohlcv('BTC/USD', timeframe='1d', limit = 100)
 
 df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -83,6 +84,21 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
     df['basicUpperBand'] = (df['high'] + df['low'])/2 + (multiplier*df['ATR'])
     df['basicLowerBand'] = (df['high'] + df['low'])/2 - (multiplier*df['ATR'])
 
-upperAndLowerband(df)
+    for row in range(1, len(df.index)):
+        print(row)
+        prev = row - 1
 
-print(df)
+        #this is the trend indicator that will keep track of when and where the buy/sell signals are
+        #we are usign the upper/ lower bound and the current closing row to determine if the trend flips
+        #if the current row close is greater than the previous upperband, then we generate a buy signal because we are in an uptrend, 
+        # if the current row has close that is lesser than the lowerband, then we generate a sell signal and entering a downtrend
+        # the upperband and loweband indicators are only going going to change if there is a new greater low(upperband) or higher high (lowerband)/ which is the trend indicator) 
+        if df['close'][row] > df['upperband'][prev]:        #true = uptrend | false = downtrend
+            df['trendIndicator'][row]= True
+        elif df['close'][row] < df['lowerband'][prev]:
+            df['trendIndicator'][row] = False
+    return df
+
+print(upperAndLowerband(df))
+
+# print(df)
