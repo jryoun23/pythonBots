@@ -17,11 +17,11 @@ API_PASSPHRASE = config.COINBASE_API_PASSPHRASE
 
 exchange = ccxt.coinbasepro()
 
-bars = exchange.fetch_ohlcv('BTC/USD', timeframe='1m', limit = 100)
+bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
 
-df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
+df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-
+print(df)
 
 # here we are going to be computing an upper and lower band with the formulas as follows
 # It is going to be split up into two different sections 
