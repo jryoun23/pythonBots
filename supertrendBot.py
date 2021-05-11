@@ -17,7 +17,7 @@ API_PASSPHRASE = config.COINBASE_API_PASSPHRASE
 
 exchange = ccxt.coinbasepro()
 
-bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
+bars = exchange.fetch_ohlcv('BTC/USD', timeframe='1m', limit = 100)
 
 df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -102,13 +102,16 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
         #this portion of the code does not correctly adjust the bands, it just acts as a flag on the indicator
         if df['close'][row] > df['UpperBand'][prev]:        #true = uptrend | false = downtrend
             df['trendIndicator'][row]= True
+            #THIS IS A BUY SIGNAL
         elif df['close'][row] < df['LowerBand'][prev]:
             df['trendIndicator'][row] = False
+            #THIS IS A SELL SIGNAL
         else:
+            #THIS IS A DO NOTHING SIGNAL
             df['trendIndicator'][row] = df['trendIndicator'][prev]
-            if not(df['trendInicator'][row]) and df['UpperBand'][row] > df['UpperBand'][prev]:      #if youre in a downtrend, we want to find the minimum value, so if the new upperband is higher than the old upperband, we want to keep the old upperband
-                df['UpperBand'][row] = ['UpperBand'][prev]
-            elif df['trendIndicator'][row] and df['LowerBand'][row] > df['LowerBand'][prev]:        # if we are in an uptrend, we want to keep the highest value for the lowerband
+            if not df['trendIndicator'][row] and df['UpperBand'][row] > df['UpperBand'][prev]:      #if youre in a downtrend, we want to find the minimum value, so if the new upperband is higher than the old upperband, we want to keep the old upperband
+                df['UpperBand'][row] = df['UpperBand'][prev]
+            elif df['trendIndicator'][row] and df['LowerBand'][row] < df['LowerBand'][prev]:        # if we are in an uptrend, we want to keep the highest value for the lowerband
                 df['LowerBand'][row] = df['LowerBand'][prev]
 
     return df
