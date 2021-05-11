@@ -17,7 +17,7 @@ API_PASSPHRASE = config.COINBASE_API_PASSPHRASE
 
 exchange = ccxt.coinbasepro()
 
-bars = exchange.fetch_ohlcv('BTC/USD', timeframe='1d', limit = 100)
+bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
 
 df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -83,8 +83,9 @@ def atr(df, period = 7):        #Calculates Average true range of the last x TR'
 
 def upperAndLowerband(df, multiplier = 3, period = 7):
     df['ATR'] = atr(df, period)     #can change the period is well using period =
-    df['basicUpperBand'] = (df['high'] + df['low'])/2 + (multiplier*df['ATR'])
-    df['basicLowerBand'] = (df['high'] + df['low'])/2 - (multiplier*df['ATR'])
+    df['UpperBand'] = (df['high'] + df['low'])/2 + (multiplier*df['ATR'])
+    df['LowerBand'] = (df['high'] + df['low'])/2 - (multiplier*df['ATR'])
+    df ['trendIndicator'] = True
 
     for row in range(1, len(df.index)):
         print(row)
@@ -95,10 +96,21 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
         #if the current row close is greater than the previous upperband, then we generate a buy signal because we are in an uptrend, 
         # if the current row has close that is lesser than the lowerband, then we generate a sell signal and entering a downtrend
         # the upperband and loweband indicators are only going going to change if there is a new greater low(upperband) or higher high (lowerband)/ which is the trend indicator) 
-        if df['close'][row] > df['basicUpperBand'][prev]:        #true = uptrend | false = downtrend
+        #if the close is on the middle of the uptrend and downtrens, there is no change in the trend value, so it stays the same as whatever it was
+
+
+        #this portion of the code does not correctly adjust the bands, it just acts as a flag on the indicator
+        if df['close'][row] > df['UpperBand'][prev]:        #true = uptrend | false = downtrend
             df['trendIndicator'][row]= True
-        elif df['close'][row] < df['basicLowerBand'][prev]:
+        elif df['close'][row] < df['LowerBand'][prev]:
             df['trendIndicator'][row] = False
+        else:
+            df['trendIndicator'][row] = df['trendIndicator'][prev]
+            if not(df['trendInicator'][row]) and df['UpperBand'][row] > df['UpperBand'][prev]:      #if youre in a downtrend, we want to find the minimum value, so if the new upperband is higher than the old upperband, we want to keep the old upperband
+                df['UpperBand'][row] = ['UpperBand'][prev]
+            elif df['trendIndicator'][row] and df['LowerBand'][row] > df['LowerBand'][prev]:        # if we are in an uptrend, we want to keep the highest value for the lowerband
+                df['LowerBand'][row] = df['LowerBand'][prev]
+
     return df
 
 print(upperAndLowerband(df))
