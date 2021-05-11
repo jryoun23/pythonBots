@@ -1,3 +1,5 @@
 ccxt
 numpy
 ta
+pandas
+schedules
