@@ -24,17 +24,18 @@ API_KEY = config.COINBASE_API_KEY
 API_PASSWORD = config.COINBASE_API_PASSWORD
 API_PASSPHRASE = config.COINBASE_API_SECRET
 
-exchange = ccxt.coinbasepro({
+exchange1 = ccxt.coinbasepro({
     "apiKey" : config.COINBASE_API_KEY,
     "secret" : config.COINBASE_API_SECRET,
     "password" : config.COINBASE_API_PASSWORD
 })
+exchange = ccxt.binanceus()
 #units = exchange.fetch_balance()
 
 
 bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
 
-df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
+df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
 
 
@@ -141,8 +142,8 @@ def checkSignals(df):
     global runningBar
 
     print("Checking for buy and sell signals")
-    #getting the index of the last two rows of the df
-    print(df.tail(2))
+    #getting the index of the last 5 rows of the df
+    print(df.tail(5))
     mostRecentIndex = len(df.index) - 1
     oneBefore = mostRecentIndex -1
 
@@ -172,13 +173,12 @@ def checkSignals(df):
 def driver():
     print(f"Getting new data on {datetime.now().isoformat()}")
     bars = exchange.fetch_ohlcv('BTC/USD', timeframe= '1m', limit = 50)
-    df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
+    df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     data = upperAndLowerband(df)
     checkSignals(data)
 
 schedule.every(1).minutes.do(driver)
-
 
 
 
