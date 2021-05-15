@@ -5,15 +5,19 @@
 #I plan to learn more about this strategy as I read into it.
 #This is a bot derived from the partTimeLarry Supertrend video series
 
+from datetime import datetime
 import config
 import ccxt
 import ta
 import pandas as pd
+import schedule
+import time
+
 pd.set_option('display.max_rows', None)
 
 API_KEY = config.COINBASE_API_KEY
 API_PASSWORD = config.COINBASE_API_PASSWORD
-API_PASSPHRASE = config.COINBASE_API_PASSPHRASE
+API_PASSPHRASE = config.COINBASE_API_SECRET
 
 exchange = ccxt.coinbasepro()
 
@@ -21,7 +25,7 @@ bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
 
 df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-print(df)
+
 
 # here we are going to be computing an upper and lower band with the formulas as follows
 # It is going to be split up into two different sections 
@@ -116,6 +120,32 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
 
     return df
 
-print(upperAndLowerband(df))
+#this fucntion is going to check for new buy and sell signals
+
+def checkSignals(df):
+    print("Checking for buy and sell signals")
+
+
+#This is the get new bars function
+def driver():
+    print(f"Getting new data on {datetime.now().isoformat()}")
+    bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 50)
+    df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+    data = upperAndLowerband(df)
+    checkSignals(df)
+
+schedule.every(10).seconds.do(driver)
+
+
+
+
+#This is going to be the driver for retrieveing the mos recent completed bars from ccxt
+while True:
+    schedule.run_pending()
+    time.sleep(1)
+
+
+
 
 # print(df)
