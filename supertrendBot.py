@@ -6,6 +6,8 @@
 #This is a bot derived from the partTimeLarry Supertrend video series
 
 from datetime import datetime
+
+from pandas.core import api
 import config
 import ccxt
 import ta
@@ -13,13 +15,22 @@ import pandas as pd
 import schedule
 import time
 
+import warnings
+warnings.filterwarnings('ignore')
+
 pd.set_option('display.max_rows', None)
 
 API_KEY = config.COINBASE_API_KEY
 API_PASSWORD = config.COINBASE_API_PASSWORD
 API_PASSPHRASE = config.COINBASE_API_SECRET
 
-exchange = ccxt.coinbasepro()
+exchange = ccxt.coinbasepro({
+    "apiKey" : config.COINBASE_API_KEY,
+    "secret" : config.COINBASE_API_SECRET,
+    "password" : config.COINBASE_API_PASSWORD
+})
+#units = exchange.fetch_balance()
+
 
 bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 100)
 
@@ -92,7 +103,6 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
     df ['trendIndicator'] = True
 
     for row in range(1, len(df.index)):
-        print(row)
         prev = row - 1
 
         #this is the trend indicator that will keep track of when and where the buy/sell signals are
@@ -121,21 +131,53 @@ def upperAndLowerband(df, multiplier = 3, period = 7):
     return df
 
 #this fucntion is going to check for new buy and sell signals
+#basically, we want to see if there is a change in the running bar, and the most recent bar
+
+#this running bar boolean value should be changed whether or not you have money in the currency you're trading.
+#If you have money in, you should set this to TRUE, and if you have usd balance, set it to false
+runningBar = True
 
 def checkSignals(df):
+    global runningBar
+
     print("Checking for buy and sell signals")
+    #getting the index of the last two rows of the df
+    print(df.tail(2))
+    mostRecentIndex = len(df.index) - 1
+    oneBefore = mostRecentIndex -1
+
+
+    if not df['trendIndicator'][oneBefore] and df['trendIndicator'][mostRecentIndex]:
+        #here we are finding if wwe are going from a sell to a buy signal and executign a buy
+        if not runningBar:
+            #exchange.create_market_buy_order('ETH/USD', 0)
+            print("JUST EXECUTED BUY")
+            runningBar = True
+        else:
+            print("already in")
+
+    if df['trendIndicator'][oneBefore] and not df['trendIndicator'][mostRecentIndex]: 
+        #here we are finding if wwe are going from a buy to a sell signal and executign a sell
+        if runningBar:
+            print("JUST EXECUTED SELL")
+            #exchange.create_market_sell_order('ETH/USD', 0)
+        else:
+            print("Already out")
+
+
+
 
 
 #This is the get new bars function
 def driver():
     print(f"Getting new data on {datetime.now().isoformat()}")
-    bars = exchange.fetch_ohlcv('BTC/USD', timeframe='15m', limit = 50)
+    bars = exchange.fetch_ohlcv('BTC/USD', timeframe= '1m', limit = 50)
     df = pd.DataFrame(bars[:], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     data = upperAndLowerband(df)
-    checkSignals(df)
+    checkSignals(data)
 
-schedule.every(10).seconds.do(driver)
+schedule.every(1).minutes.do(driver)
 
 
 
