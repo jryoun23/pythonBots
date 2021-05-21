@@ -172,15 +172,16 @@ def checkSignals(df):
 #This is the get new bars function
 def driver():
     print(f"Getting new data on {datetime.now().isoformat()}")
-    bars = exchange.fetch_ohlcv('BTC/USD', timeframe= '1m', limit = 50)
+    bars = exchange.fetch_ohlcv('BTC/USD', timeframe= '1h', limit = 50)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high','low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     data = upperAndLowerband(df)
     checkSignals(data)
 
-schedule.every(1).minutes.do(driver)
 
+schedule.every(1).hour.do(driver)
 
+driver()    #running the initial driver
 
 #This is going to be the driver for retrieveing the mos recent completed bars from ccxt
 while True:

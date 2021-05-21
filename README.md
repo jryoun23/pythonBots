@@ -13,7 +13,7 @@ Soemthing worth looking out for soon is the supertrend variant by Kiannc(?) to b
 Originally, I was using coinbasepro data, but it was skipping bars and returning bar values in chunks rather than updating immediatley, so I sswitched to binance US to see if it would be updated more regularyly (?) and it absolutley is better.
 
 Below is the kivnac pinescript that i want to implement next time ---------------------------------
-
+"
 //@version=4
 study("Supertrend", overlay = true, format=format.price, precision=2, resolution="")
 
@@ -51,3 +51,10 @@ alertcondition(buySignal, title="SuperTrend Buy", message="SuperTrend Buy!")
 alertcondition(sellSignal, title="SuperTrend Sell", message="SuperTrend Sell!")
 changeCond = trend != trend[1]
 alertcondition(changeCond, title="SuperTrend Direction Change", message="SuperTrend has changed direction!")
+"
+
+I think the goal of this is just going to be to create a little art piece using a raspberry pi and an LED screen. I'll give the bot 50$ and have it trade 80% of my total portfolio at a 1hr period? I think supertrrend is good for long-term market analysis, but it si NOT for BCT day trading i'll tell you what. The BTC market is too flip floppy, but not volatile enough to actually accrue gains before there is a short term change. i think hourly-daily candlestick trading for THIS PARTICULAR supertrend bit is the way to go.
+
+I already have a raspberryPI model 3 B+, I am going to be using this guy's LED libraries to display the retrievd data as well as my most recent order status. This should be pretty fun actually. I am looking forward to it.
+https://www.youtube.com/watch?v=Nn5u9xhHCTM
+
